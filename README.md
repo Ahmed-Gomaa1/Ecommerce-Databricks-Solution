@@ -108,11 +108,6 @@ The codebase is modular and organized for reusability.
 2.  This repository cloned into Databricks Repos.
 3.  Source CSV files uploaded to a Unity Catalog Volume.
 
-### Step-by-Step Instructions
-1.  **Configure Path:** In both `Main Pipeline.py` and `Streaming Pipeline.py`, update the `sys.path.append()` line to point to the root of this repository in your workspace.
-2.  **Run Batch Pipeline:** Open `Main Pipeline.py`, configure the widgets if necessary, and click "Run All". This will create the full set of batch tables.
-3.  **Run Streaming Pipeline:** Open `Streaming Pipeline.py`. Ensure the `default` database from the batch run exists. Run the notebook to process events data incrementally into a separate `streaming_db` database.
-
 ---
 
 ## 5. Productionalization
