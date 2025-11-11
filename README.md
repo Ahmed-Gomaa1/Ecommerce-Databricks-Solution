@@ -21,35 +21,6 @@ This project uses the **Medallion Architecture** to progressively refine data ac
 
 ### Architecture Diagram
 
-graph TD
-    subgraph "Data Sources"
-        A[fa:fa-file-csv Raw CSV Files <br> (in Unity Catalog Volume)]
-    end
-
-    subgraph "Databricks Platform"
-        B[fa:fa-calendar Batch Pipeline <br> (Databricks Job)]
-        C[fa:fa-bolt Streaming Pipeline <br> (Auto Loader)]
-
-        D[fa:fa-database Bronze Layer <br> (Raw Delta Tables)]
-        E[fa:fa-database Silver Layer <br> (Enriched Delta Table)]
-        F[fa:fa-database Gold Layer <br> (Aggregated Delta Tables)]
-    end
-
-    subgraph "End Users"
-        G[fa:fa-chart-bar BI / Analytics <br> (Dashboards, Reports)]
-        H[fa:fa-cogs Machine Learning <br> (Models)]
-    end
-
-    A --> B
-    A --> C
-    B --> D
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    F --> H
-    E --> G
-    
 *(**Action:** Insert your architecture diagram image URL here.)*
 
 **Technology Stack:**
