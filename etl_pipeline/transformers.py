@@ -76,7 +76,21 @@ def create_silver_layer(bronze_dfs):
         col("s.item_category_id") == col("c.categoryid"),
         "left"
     ).select(final_silver_columns)
+
+    # --- Data Quality Checks for Silver Layer ---
+    print("Performing data quality checks on Silver table...")
     
+    # Check 1: Ensure the primary identifiers are never null
+    null_events_count = silver_df.filter(col("timestamp").isNull() | col("visitorid").isNull() | col("itemid").isNull()).count()
+    if null_events_count > 0:
+        raise AssertionError(f"Quality Check Failed: Found {null_events_count} rows with null key identifiers in the Silver table.")
+    
+    # Check 2: Ensure that for every transaction, there is a transactionid
+    null_txn_id_count = silver_df.filter((col("event") == "transaction") & col("transactionid").isNull()).count()
+    if null_txn_id_count > 0:
+        raise AssertionError(f"Quality Check Failed: Found {null_txn_id_count} transaction events with a null transactionid.")
+        
+    print("Silver layer data quality checks passed.")
     print("Silver layer transformation complete.")
     return silver_df
 
@@ -101,6 +115,14 @@ def create_gold_layers(silver_df):
         .agg(count("transactionid").alias("number_of_transactions")) \
         .orderBy(desc("date"), desc("number_of_transactions"))
     print("Created daily_sales_by_category_gold.")
+    
+    # --- Data Quality Check for Gold Table ---
+    print("Performing data quality checks on Gold table: daily_sales...")
+    negative_sales_count = daily_sales.filter(col("number_of_transactions") < 0).count()
+    if negative_sales_count > 0:
+        raise AssertionError(f"Quality Check Failed: Found {negative_sales_count} records with negative sales counts.")
+    
+    print("Gold layer data quality checks passed.")
 
     # --- Gold Table 2: Top 100 Most Viewed Items ---
     top_viewed_items = silver_df \
