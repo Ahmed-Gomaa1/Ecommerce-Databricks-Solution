@@ -112,3 +112,67 @@ The Medallion Architecture is a best practice for structuring data in a data lak
 
 ### Project Structure
 The code is organized into a modular structure within the `etl_pipeline` directory, managed via Databricks Repos.
+.
+├── etl_pipeline/
+│ ├── reader.py # Functions for data extraction (Bronze)
+│ ├── transformers.py # Core business logic (Silver & Gold)
+│ └── writer.py # Functions for writing Delta tables
+├── Main Pipeline.py # Orchestrator notebook for the batch job
+└── Streaming Pipeline.py # Orchestrator notebook for the streaming job
+code
+Code
+### Batch Pipeline (Daily ETL)
+The `Main Pipeline` notebook orchestrates the daily batch job.
+1.  **Extract:** The `reader.read_source_data` function reads all CSV files from the source Volume and combines the partitioned `item_properties` files.
+2.  **Transform:** The `transformers.create_silver_layer` function is called to perform the complex point-in-time join and create the unified `events_enriched_silver` table.
+3.  **Load:** The `writer.write_delta_table` function saves the bronze and silver tables.
+4.  **Aggregate:** The `transformers.create_gold_layers` function is called to generate all the business-ready Gold tables from the Silver table. These are then saved using the writer function.
+
+### Streaming Pipeline (Real-Time Ingestion)
+The `Streaming Pipeline` notebook demonstrates how to evolve the architecture for real-time needs.
+1.  **Extract:** It uses **Spark Structured Streaming with Auto Loader** (`spark.readStream`) to watch the source Volume directory. It is configured to only process new files matching the pattern `*events*.csv`.
+2.  **Transform (Micro-batch):** For each small "micro-batch" of new data, the `.forEachBatch` command is used. Inside this command, we call our existing `create_silver_layer` function, proving the reusability of our code. This function joins the incoming stream of events against a static read of the properties and categories tables.
+3.  **Load:** The transformed micro-batch is appended to a separate streaming target table (`events_enriched_silver_stream`). Checkpoints are stored in the UC Volume to ensure data is processed exactly once.
+
+---
+
+## 5. How to Run the Solution
+
+### Prerequisites
+1.  A Databricks workspace (Community Edition is sufficient).
+2.  A Git repository (e.g., on GitHub) cloned into Databricks Repos.
+3.  The source CSV files uploaded to a Unity Catalog Volume (e.g., `/Volumes/workspace/e-commerce_data/csv_files/`).
+4.  A running cluster.
+
+### Step-by-Step Instructions
+1.  **Clone the Repository:** Add this repository to your Databricks workspace via the Repos UI.
+2.  **Configure Paths:** In the `Main Pipeline` and `Streaming Pipeline` notebooks, update the `sys.path.append()` line to point to the correct path of your repo in your workspace.
+3.  **Run the Batch Pipeline:**
+    *   Open the `Main Pipeline` notebook.
+    *   Ensure the widgets at the top point to the correct source volume and target database.
+    *   Click "Run All". This will create all the batch tables in the specified database (e.g., `default`).
+4.  **Run the Streaming Pipeline:**
+    *   Open the `Streaming Pipeline` notebook.
+    *   Ensure the widgets are correctly configured, especially the checkpoint path which must point to a location within a UC Volume.
+    *   Run the notebook. It will process the existing event files and then stop (due to the `trigger(availableNow=True)` setting).
+    *   To test the streaming capability, upload a new CSV file with event data into the source Volume and re-run the notebook. It will only process the new file.
+
+---
+
+## 6. Productionalization & Next Steps
+
+### Orchestration
+The `Main Pipeline` notebook is production-ready and can be scheduled using **Databricks Workflows (Jobs)**.
+*   **Job Configuration:** A job is created to run the `Main Pipeline` notebook on a cost-effective Job Cluster.
+*   **Scheduling:** The job is set to a CRON schedule (e.g., daily at 3:00 AM) to automate the entire ETL process.
+*   **Note:** The free Databricks Community Edition has a simplified Jobs feature that allows scheduling on the interactive cluster. In a standard workspace, dedicated Job Clusters would be used for better cost-efficiency and isolation.
+
+### Data Quality & Monitoring
+*   **Data Quality Checks:** The `transformers.py` module includes `assert` statements that act as data quality checks (e.g., checking for null keys or invalid values). If a check fails, the pipeline will stop and raise an error.
+*   **Monitoring & Alerting:** The Databricks Job is configured with **email alerts** to notify the engineering team upon any job failure, allowing for immediate investigation and resolution.
+
+### Future Enhancements
+*   **Full DLT Migration:** For a fully managed streaming solution, the entire pipeline could be migrated to a **Delta Live Tables (DLT)** pipeline. DLT would automate infrastructure management, data quality monitoring, and simplify the code.
+*   **Advanced Data Quality:** Implement a more robust data quality framework like **Great Expectations** within the DLT pipeline to define and track a comprehensive suite of expectations.
+*   **CI/CD:** Integrate the Databricks Repo with GitHub Actions (or another CI/CD tool) to automate the testing and deployment of pipeline code from development to production environments.
+
