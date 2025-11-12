@@ -3,11 +3,12 @@
 This repository contains a scalable ETL pipeline built on Databricks to process raw eCommerce data into clean, analytics-ready tables. The solution demonstrates best practices including the Medallion Architecture, modular code, version control, and both batch and streaming capabilities.
 
 ## Table of Contents
-1. [Architecture & Data Flow](#architecture--data-flow)
-2. [Data Model](#data-model)
-3. [Implementation Overview](#implementation-overview)
-4. [Visualizing the Data Flow](#visualizing-the-data-flow)
-5. [Productionalization](#productionalization)
+1. [1. Architecture & Data Flow](#1-architecture--data-flow)
+2. [2. Data Model](#2-data-model)
+3. [3. Implementation Overview](#3-implementation-overview)
+4. [4. Visualizing the Data Flow](#4-visualizing-the-data-flow)
+5. [5. Productionalization](#5-productionalization)
+
 
 ---
 
