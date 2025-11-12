@@ -12,7 +12,7 @@ This repository contains a scalable ETL pipeline built on Databricks to process 
 ---
 
 ## 1. Architecture & Data Flow
-![Architecture & Data Flow](Architecture diagram.jpg)
+![Architecture & Data Flow](Architecture diagram.png)
 This project uses the **Medallion Architecture** to progressively refine data across three layers. The entire pipeline is built using a modern Databricks stack including Unity Catalog, Delta Lake, and PySpark.
 
 *   **Bronze Layer:** Raw, unaltered data ingested directly from source CSVs into Delta tables.
