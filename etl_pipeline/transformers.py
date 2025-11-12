@@ -6,12 +6,13 @@ from pyspark.sql.functions import (
     sum as _sum, max as _max, desc, when, rank, col, first
 )
 
-def create_silver_layer(bronze_dfs):
+def create_silver_layer(bronze_dfs, skip_quality_check=False):
     """
     Transforms raw bronze DataFrames into a single, enriched Silver DataFrame.
     
     Args:
         bronze_dfs: A dictionary of DataFrames from the reader ('events', 'properties', 'categories').
+        skip_quality_check: Boolean flag. If True, skips the assertions on null identifiers (for streaming use).
         
     Returns:
         The enriched Silver DataFrame.
@@ -58,14 +59,10 @@ def create_silver_layer(bronze_dfs):
 
     # --- Join with Category Tree & Select Final Columns ---
     print("Step C.1: Joining with category data...")
-    
-    # Define the list of columns we want to keep to avoid errors with missing pivoted columns
     final_silver_columns = [
         "s.timestamp", "s.visitorid", "s.event", "s.itemid", "s.transactionid",
         "s.item_category_id", col("c.parentid").alias("parent_category_id")
     ]
-    
-    # Dynamically add pivoted columns if they exist in the DataFrame after the pivot
     if 'available' in pivoted_df.columns:
         final_silver_columns.append(col("s.available"))
     if '770' in pivoted_df.columns:
@@ -78,33 +75,22 @@ def create_silver_layer(bronze_dfs):
     ).select(final_silver_columns)
 
     # --- Data Quality Checks for Silver Layer ---
-    print("Performing data quality checks on Silver table...")
-    
-    # Check 1: Ensure the primary identifiers are never null
-    null_events_count = silver_df.filter(col("timestamp").isNull() | col("visitorid").isNull() | col("itemid").isNull()).count()
-    if null_events_count > 0:
-        raise AssertionError(f"Quality Check Failed: Found {null_events_count} rows with null key identifiers in the Silver table.")
-    
-    # Check 2: Ensure that for every transaction, there is a transactionid
-    null_txn_id_count = silver_df.filter((col("event") == "transaction") & col("transactionid").isNull()).count()
-    if null_txn_id_count > 0:
-        raise AssertionError(f"Quality Check Failed: Found {null_txn_id_count} transaction events with a null transactionid.")
+    if not skip_quality_check:
+        print("Performing data quality checks on Silver table...")
+        null_events_count = silver_df.filter(col("timestamp").isNull() | col("visitorid").isNull() | col("itemid").isNull()).count()
+        if null_events_count > 0:
+            raise AssertionError(f"Quality Check Failed: Found {null_events_count} rows with null key identifiers in the Silver table.")
         
-    print("Silver layer data quality checks passed.")
+        null_txn_id_count = silver_df.filter((col("event") == "transaction") & col("transactionid").isNull()).count()
+        if null_txn_id_count > 0:
+            raise AssertionError(f"Quality Check Failed: Found {null_txn_id_count} transaction events with a null transactionid.")
+
+        print("Silver layer data quality checks passed.")
+
     print("Silver layer transformation complete.")
     return silver_df
 
 def create_gold_layers(silver_df):
-    """
-    Creates various business-focused Gold DataFrames from the Silver layer.
-    This version is compatible with serverless compute (no caching).
-    
-    Args:
-        silver_df: The enriched Silver DataFrame.
-        
-    Returns:
-        A dictionary of Gold DataFrames, keyed by their intended table name.
-    """
     print("Starting Gold layer aggregations...")
     
     # --- Gold Table 1: Daily Sales by Category ---
