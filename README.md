@@ -99,8 +99,20 @@ The codebase is modular and organized for reusability.
 *   **`Streaming Pipeline.py` notebook:** An orchestrator for the streaming pipeline that reuses the same transformation logic to process data incrementally.
 
 ---
+## 4. Visualizing the Data Flow
+CSV Files (Raw)
+  └─> read_source_data()
+        └─> Bronze Delta Tables (events_bronze, properties_bronze, categories_bronze)
+              └─> create_silver_layer()
+                    └─> Silver Delta Table (events_enriched_silver)
+                          └─> create_gold_layers()
+                                └─> Gold Delta Tables
+                                    ├─ daily_sales_by_category_gold
+                                    ├─ top_viewed_items_gold
+                                    ├─ fact_sales_transactions_gold
+                                    ├─ customer_segments_gold
+                                    └─ conversion_funnel_gold
 
-## 4. How to Run
 
 ### Prerequisites
 1.  A Databricks workspace with a running cluster.
