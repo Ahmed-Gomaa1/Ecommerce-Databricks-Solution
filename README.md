@@ -19,10 +19,6 @@ This project uses the **Medallion Architecture** to progressively refine data ac
 *   **Silver Layer:** A single, unified source of truth (`events_enriched_silver`) where all data is joined and cleaned. This layer solves the critical challenge of handling time-varying item properties by performing a **point-in-time join**.
 *   **Gold Layer:** Aggregated, business-focused tables optimized for analytics and BI.
 
-### Architecture Diagram
-
-*(**Action:** Insert your architecture diagram image URL here.)*
-
 **Technology Stack:**
 *   **Platform:** Databricks
 *   **Storage:** Delta Lake, Unity Catalog Volumes
@@ -34,7 +30,7 @@ This project uses the **Medallion Architecture** to progressively refine data ac
 ---
 
 ## 2. Data Model
-*(**Action:** Insert your data model (ERD) image URL here.)*
+
 
 ### Silver Layer Schema
 **Table: `events_enriched_silver`**
