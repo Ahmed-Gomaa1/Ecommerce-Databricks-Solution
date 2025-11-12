@@ -32,6 +32,8 @@ This project uses the **Medallion Architecture** to progressively refine data ac
 
 ## 2. Data Model
 
+![Data_Model](Data%20model.png)
+
 
 ### Silver Layer Schema
 **Table: `events_enriched_silver`**
