@@ -3,11 +3,11 @@
 This repository contains a scalable ETL pipeline built on Databricks to process raw eCommerce data into clean, analytics-ready tables. The solution demonstrates best practices including the Medallion Architecture, modular code, version control, and both batch and streaming capabilities.
 
 ## Table of Contents
-1. [Architecture & Data Flow](#1-architecture--data-flow)
-2. [Data Model](#2-data-model)
-3. [Implementation Overview](#3-implementation-overview)
-4. [How to Run](#4-how-to-run)
-5. [Productionalization](#5-productionalization)
+1. [Architecture & Data Flow](#architecture--data-flow)
+2. [Data Model](#data-model)
+3. [Implementation Overview](#implementation-overview)
+4. [Visualizing the Data Flow](#visualizing-the-data-flow)
+5. [Productionalization](#productionalization)
 
 ---
 
@@ -100,19 +100,30 @@ The codebase is modular and organized for reusability.
 
 ---
 ## 4. Visualizing the Data Flow
+```text
 CSV Files (Raw)
-  └─> read_source_data()
-        └─> Bronze Delta Tables (events_bronze, properties_bronze, categories_bronze)
-              └─> create_silver_layer()
-                    └─> Silver Delta Table (events_enriched_silver)
-                          └─> create_gold_layers()
-                                └─> Gold Delta Tables
-                                    ├─ daily_sales_by_category_gold
-                                    ├─ top_viewed_items_gold
-                                    ├─ fact_sales_transactions_gold
-                                    ├─ customer_segments_gold
-                                    └─ conversion_funnel_gold
+   └─> read_source_data()
+         └─> Bronze Delta Tables
+              ├─ events_bronze
+              ├─ properties_bronze
+              └─ categories_bronze
+                   └─> create_silver_layer()
+                         └─> Silver Delta Table
+                              └─> events_enriched_silver
+                                   └─> create_gold_layers()
+                                         └─> Gold Delta Tables
+                                              ├─ daily_sales_by_category_gold
+                                              ├─ top_viewed_items_gold
+                                              ├─ fact_sales_transactions_gold
+                                              ├─ customer_segments_gold
+                                              └─ conversion_funnel_gold
+```
 
+This pipeline follows the **Medallion Architecture**:
+
+- **Bronze Layer**: Raw ingested data from CSV files.
+- **Silver Layer**: Cleaned, enriched, and transformed data.
+- **Gold Layer**: Aggregated, analytics-ready tables for reporting and BI.
 
 ### Prerequisites
 1.  A Databricks workspace with a running cluster.
